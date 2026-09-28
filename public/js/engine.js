@@ -227,7 +227,11 @@
         if (s.mode !== "time" && t === w) correctChars += 1;
       }
     }
-    const rawChars = s.typed.reduce((a, t) => a + t.length, 0) + Math.max(0, s.typed.length - 1);
+    // Raw counts the same implied final space as correctChars: a completed last word in a non-time mode ends the run
+    // without a space typed, and without it a clean run showed raw below wpm.
+    const last = s.typed.length - 1;
+    const finalSpace = s.mode !== "time" && last >= 0 && last === s.index && s.typed[last] === s.words[last] ? 1 : 0;
+    const rawChars = s.typed.reduce((a, t) => a + t.length, 0) + Math.max(0, s.typed.length - 1) + finalSpace;
     const keystrokes = s.correct + s.incorrect + s.extra;
     return {
       mode: s.mode,

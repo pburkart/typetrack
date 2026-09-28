@@ -36,6 +36,26 @@ test("wpm is correct characters / 5 per minute", () => {
   assert.equal(r.duration, 12);
 });
 
+test("raw is never below wpm: a clean words run has raw equal to wpm, a mistake puts raw above it", () => {
+  // The last word's implied space counted in wpm but not in raw, so a clean run showed raw 387, wpm 390.
+  const clean = E.createTest({ mode: "words", wordCount: 2, words: ["hello", "world"], seed: 1 });
+  clean.words = ["hello", "world"];
+  typeWord(clean, "hello", 0);
+  E.space(clean, 6000);
+  typeWord(clean, "world", 12000);
+  const r = E.results(clean);
+  assert.equal(r.wpm, 12);
+  assert.equal(r.raw, r.wpm);
+
+  const slip = E.createTest({ mode: "words", wordCount: 2, words: ["hello", "world"], seed: 1 });
+  slip.words = ["hello", "world"];
+  typeWord(slip, "hellp", 0); // a wrong letter
+  E.space(slip, 6000);
+  typeWord(slip, "world", 12000);
+  const r2 = E.results(slip);
+  assert.ok(r2.raw > r2.wpm, `raw ${r2.raw} should be above wpm ${r2.wpm}`);
+});
+
 test("time mode ends on tick when the clock runs out and counts the unfinished tail as missed", () => {
   const s = E.createTest({ mode: "time", duration: 15, words: POOL, seed: 7 });
   const w = s.words[0];
