@@ -71,7 +71,11 @@ nav a.active { color: var(--text); border-bottom-color: var(--main); }
 .auth-slot a:hover { color: var(--text); }
 .auth-slot a.active { color: var(--text); border-bottom-color: var(--main); }
 .auth-slot .auth-user { color: var(--main); }
-.auth-slot button { font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; padding: 0 0 4px; }
+.auth-slot button { font-size: .8rem; text-transform: uppercase; letter-spacing: .12em; padding: 4px 0; }
+/* The header's right side shares one centre line (the Board, 2026-09-30): settings, the level bar and sign in / out.
+   The links keep the 6px under their text for the active underline (4px padding, 2px border) and get the same above
+   it, so their text sits on the box's centre as the level's does; it was 3px high. */
+.nav-right a, .auth-slot a { padding-top: 6px; }
 @media (max-width: 760px) {
   .top { flex-wrap: wrap; gap: 12px 20px; }
   .nav-main { order: 3; flex-basis: 100%; gap: 14px; }
