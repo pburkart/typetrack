@@ -6,6 +6,7 @@
 import { xpForResult, xpForGame, levelFor, BADGES, earnedBadges, summarize, dailyGoals, dayKey } from "./progress.js";
 import store from "./store.js";
 import bus from "./bus.js";
+import auth from "./auth.js";
 
 // ── Personal bests (pure) ───────────────────────────────────────────────────
 
@@ -308,10 +309,18 @@ function pbBanner(label, value, unit) {
 }
 
 // ── header level indicator ──
+/**
+ * Whether the header shows a level: for a signed-in player, and on a site with no account server (online false),
+ * where this browser's progress is all there is. Signed out on a site with accounts it shows none: a level beside
+ * "sign in" read as still signed in, and an empty one as a level-1 account.
+ */
+export const levelVisible = (user, online) => !!user || online === false;
+
 let levelEl = null;
 function renderLevel() {
   const slot = document.getElementById("auth-slot");
   if (!slot) return;
+  if (!levelVisible(auth.user, auth.online)) { if (levelEl) { levelEl.remove(); levelEl = null; } return; }
   if (!levelEl || !levelEl.isConnected) {
     levelEl = document.createElement("a");
     levelEl.className = "gz-level";

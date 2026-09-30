@@ -33,6 +33,16 @@ async function gameNames() {
   }
 }
 
+/**
+ * Which profile #/profile shows: the signed-in player's, a guest's (signed out, but this browser has history), or
+ * "signed out" (signed out on a site with accounts, and nothing here): this browser's tests, games played and xp.
+ */
+export function profileState(user, online, { tests = 0, games = 0, xp = 0 } = {}) {
+  if (user) return "player";
+  const empty = !(tests > 0) && !(games > 0) && !(xp > 0);
+  return empty && online !== false ? "signed-out" : "guest";
+}
+
 function levelBlock(name, sub, xp) {
   const l = levelFor(xp);
   return h("section", { class: "pf-head" },
@@ -150,9 +160,18 @@ function renderLocal(root, ctx, names) {
     ghost: Array.isArray(p.r.log) && p.r.log.length > 0,
   }));
   const user = auth.user;
-  const sub = user ? `signed in · results sync to your account` : h("span", {}, "this browser · ", h("a", { href: "#/login" }, "sign in"), " to keep it everywhere");
+  // Signed out with nothing on this browser (as after signing out, which clears it): say so, rather than draw an
+  // empty level-1 player that reads as somebody's account. A guest who has typed here still sees their history.
+  if (profileState(user, auth.online, { tests: s.tests, games: s.gamesDistinct, xp }) === "signed-out") {
+    root.replaceChildren(h("div", { class: "view view-profile" }, h("div", { class: "notice pf-signed-out" },
+      h("div", { class: "notice-title" }, "you are signed out"),
+      h("p", {}, "sign in to see your profile, level and history."),
+      h("p", {}, h("a", { href: "#/login" }, "sign in"), " · ", h("a", { href: "#/register" }, "create an account"), " · ", h("a", { href: "#/test" }, "take a test as a guest")))));
+    return;
+  }
+  const sub = user ? `signed in · results sync to your account` : h("span", {}, "guest · not signed in · this browser only · ", h("a", { href: "#/login" }, "sign in"), " to keep it");
   root.replaceChildren(h("div", { class: "view view-profile" },
-    levelBlock(user ? user.name : "you", sub, xp),
+    levelBlock(user ? user.name : "guest", sub, xp),
     tiles([
       ["tests", n(s.tests)],
       ["time typed", fmtDuration(s.secondsTyped)],

@@ -2,6 +2,7 @@
 // login/register reject with {status, error} so the forms can show the message.
 import { api } from "./api.js";
 import { emit } from "./bus.js";
+import { clearPersonal } from "./store.js";
 
 let current = null;
 let online = null; // null unknown, true the API answered, false it did not
@@ -39,6 +40,10 @@ export async function register(name, email, password) {
 
 export async function logout() {
   try { await api.post("/api/logout"); } catch { /* already gone or offline */ }
+  // Signing out leaves nothing of this person on the browser: their history, level and badges were readable by the
+  // next person at a shared computer, and made the site look signed in with only the name gone. Cleared before the
+  // views hear auth:changed, so none of them redraws from it.
+  clearPersonal();
   setUser(null);
 }
 

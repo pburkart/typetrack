@@ -82,5 +82,30 @@ export function addGameScore(game, score, meta) {
   return entry;
 }
 
-export const store = { get, set, remove, results, addResult, replaceResults, gameScores, addGameScore, isResult };
+/**
+ * What survives signing out: this device's preferences, not anybody's history. Everything else under "typetrack."
+ * (results, xp, badges, game scores, training progress, custom text, reading places, anything added later) is the
+ * person's, and the next person on a shared computer must not see it. An allowlist, so a new key is cleared by
+ * default. The sync queue stays: it only ever posts for the user it was queued for, and holds their unsent scores.
+ */
+export const DEVICE_KEYS = ["settings.v1", "config.v1", "lb.game", "code-golf.lang", "sync.queue", "sync.offered"];
+
+/** Sign-out: remove every personal key from this browser. Returns how many were removed. */
+export function clearPersonal() {
+  const s = storage();
+  if (!s) return 0;
+  const keep = new Set(DEVICE_KEYS.map((k) => NS + k));
+  const drop = [];
+  try {
+    for (let i = 0; i < s.length; i++) {
+      const k = s.key(i);
+      if (k && k.startsWith(NS) && !keep.has(k)) drop.push(k);
+    }
+    for (const k of drop) s.removeItem(k);
+  } catch { /* storage blocked: nothing we can do */ }
+  emit("store:cleared", { removed: drop.length });
+  return drop.length;
+}
+
+export const store = { get, set, remove, results, addResult, replaceResults, gameScores, addGameScore, isResult, clearPersonal };
 export default store;
